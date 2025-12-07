@@ -28,7 +28,9 @@ extension ContentView {
         private(set) var error: Error?
         private(set) var route: [[NetResponse]] = []
         private(set) var pings: [NetResponse] = []
+        private(set) var pingsweeps: [NetResponse] = []
         private(set) var ping: NetResponse = .empty
+        
         internal var network: NetDiagnosticsProtocol
         
         init(network: NetDiagnosticsProtocol = NetDiagManager()) {
@@ -46,6 +48,23 @@ extension ContentView {
             )
             self.ping = ping
         }
+        
+        fileprivate func addSweepPings(_ items: [Pinger.Response]) {
+            var pings: [NetResponse] = []
+            for item in items {
+                let res = NetResponse(
+                    len: item.len,
+                    from: item.from,
+                    hopLimit: Int(item.hopLimit),
+                    sequence: Int(item.sequence),
+                    identifier: Int(item.identifier),
+                    rtt: item.rtt
+                )
+                pings.append(res)
+            }
+            self.pingsweeps = pings
+        }
+        
         fileprivate func addPings(_ items: [Pinger.Response]) {
             var pings: [NetResponse] = []
             for item in items {
@@ -55,7 +74,8 @@ extension ContentView {
                     hopLimit: Int(item.hopLimit),
                     sequence: Int(item.sequence),
                     identifier: Int(item.identifier),
-                    rtt: item.rtt)
+                    rtt: item.rtt
+                )
                 pings.append(res)
             }
             self.pings = pings
@@ -81,7 +101,6 @@ extension ContentView {
             }
             self.route = route
         }
-        
         
         // MARK: Ping[s] -> Result<Pinger.Response, Error>
         private func ping(
@@ -364,6 +383,36 @@ extension ContentView {
                 }
                 self.addPings(result)
             }
+        }
+        
+        func pingsweep(
+            from source: String,
+            to target: String,
+            packetSize: Int? = nil,
+            hopLimit: UInt8? = nil,
+            timeOut: TimeInterval = 1.0
+        ) async throws {
+            let result = try await withThrowingTaskGroup(of: Result<Pinger.Response, Error>.self) { group in
+                for current in IPRangeIterator(lower: source, upper: target) {
+                    group.addTask {
+                        try await self.ping(
+                            address: current,
+                            packetSize: packetSize,
+                            hopLimit: hopLimit,
+                            timeOut: timeOut
+                        )
+                    }
+                }
+                return try await group.reduce(into: [Pinger.Response]()) { result, name in
+                    switch name {
+                    case let .success(item):
+                        result.append(item)
+                    case let .failure(error):
+                        self.error = error
+                    }
+                }
+            }
+            self.addSweepPings(result)
         }
     }
 }

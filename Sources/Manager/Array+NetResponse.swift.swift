@@ -6,16 +6,16 @@
 
 import SwiftUI
 
-// MARK: Array<[NetResponse]>
+//MARK: Traceroute format
 extension Array where Element == [NetResponse] {
     func format() -> [String] {
         var result: [String] = []
         for (index, item) in self.enumerated() {
-            result.append(formatResponse(responses: item, index: index))
+            result.append(format(responses: item, index: index))
         }
         return result
     }
-    private func formatResponse(responses: Element, index: Int) -> String {
+    private func format(responses: Element, index: Int) -> String {
         var sequence: Int = index * 3
         var format: String = "* * *"
         for response in responses {
@@ -36,16 +36,19 @@ extension Array where Element == [NetResponse] {
     }
 }
 
+//MARK: Ping format
+
+extension NetResponse {
+    func format() -> String {
+        "\(self.len) bytes from \(self.from): icmp_seq=\(self.sequence) ttl=\(self.hopLimit) time=\(self.rtt.millisecsString) ms"
+    }
+}
 extension Array where Element == NetResponse {
     func format() -> [String] {
         var result: [String] = []
         for item in self {
-            result.append(formatResponse(response: item))
+            result.append(item.format())
         }
         return result
-    }
-    private func formatResponse(response: Element) -> String {
-        var format = "64 bytes from \(response.from): icmp_seq=\(response.sequence) ttl=\(response.hopLimit) time=\(response.rtt) ms"
-        return format
     }
 }

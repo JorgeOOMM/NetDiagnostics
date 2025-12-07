@@ -8,10 +8,8 @@
 import NetDiagnosis
 
 extension Pinger {
-    convenience init?(hostName: String) throws {
-        if let remoteAddr = try? IPAddr.resolve(domainName: hostName) {
-            try self.init(remoteAddr: remoteAddr[0])
-        }
-        return nil
+    convenience init(hostName: String) throws {
+        let remoteAddr = try IPAddr.resolve(domainName: hostName)
+        try self.init(remoteAddr: remoteAddr[0])
     }
 }
