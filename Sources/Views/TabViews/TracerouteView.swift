@@ -17,23 +17,30 @@ struct TracerouteConfig {
     var timeOut: Float = defaultTimeOut
 }
 
+
+
+
+
 // MARK: TracerouteView
 struct TracerouteView: View {
     
 #if os(iOS)
     @Environment(\.horizontalSizeClass)
     private var horizontalSizeClass
+    @Environment(\.verticalSizeClass)
+    private var verticalSizeClass
     private var isCompact: Bool { horizontalSizeClass == .compact }
 #else
     private let isCompact = false
 #endif
     
-    @State var config = TracerouteConfig()
-    @State private var discloseTracerouteParams = false
+    @State private var config = TracerouteConfig()
+    
     @State private var isMapPresented = false
+    @State private var isSettingsPresented = false
     @State private var viewModel: ContentView.ViewModel
     @State private var networkAddress = "www.google.com"
-
+    
     init(viewModel: ContentView.ViewModel) {
         self.viewModel = viewModel
     }
@@ -45,79 +52,62 @@ struct TracerouteView: View {
     }
     
     func run() {
-        
+        Task {
+            await viewModel.traceroute(to: networkAddress,
+                                       packetSize: Int(config.packetSize),
+                                       initHop: UInt8(config.initHop),
+                                       maxHop: UInt8(config.maxHop),
+                                       packetCount: UInt8(config.packetCount),
+                                       timeOut: TimeInterval(config.timeOut))
+        }
     }
+    
     var body: some View {
-        NavigationStack{
+        NavigationStack {
+            VStack {
+                SearchableView(caption: "Network Address", searchText: $networkAddress) {
+                    run()
+                }
+                
                 TracerouteGridView(route: self.viewModel.route)
-                      
-                Spacer()
-                Group {
-                    DisclosureGroup(isExpanded: $discloseTracerouteParams) {
-                        Spacer()
-                        NameTextOverlaySlider(name: "Len",
-                                              value: $config.packetSize,
-                                              minValue: minPacketSize,
-                                              maxValue: maxPacketSize,
-                                              step: 1.0)
-                        Spacer()
-                        NameTextOverlaySlider(name: "Time",
-                                              value: $config.timeOut,
-                                              minValue: minTimeOut,
-                                              maxValue: maxTimeOut,
-                                              step: 1.0)
-                        Spacer()
-                        NameTextOverlaySlider(name: "InitHop",
-                                              value: $config.initHop,
-                                              minValue: minInitHop,
-                                              maxValue: maxInitHop,
-                                              step: 1.0)
-                        Spacer()
-                        NameTextOverlaySlider(name: "MaxHop",
-                                              value: $config.maxHop,
-                                              minValue: minMaxHop,
-                                              maxValue: maxMaxHop,
-                                              step: 1.0)
-                        Spacer()
-                        NameTextOverlaySlider(name: "PacketCount",
-                                              value: $config.packetCount,
-                                              minValue: minPacketCount,
-                                              maxValue: maxPacketCount,
-                                              step: 1.0)
-                    } label: {
-                        HStack {
-                            Label("Parameters", systemImage: "slider.horizontal.3")
-                                .foregroundColor(.secondary)
-                            Spacer()
+                    .navigationTitle("Traceroute")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .navigationViewStyle(StackNavigationViewStyle())
+                    .toolbar {
+                        ToolbarItem(placement: .topBarLeading) {
+                            Button("Map", systemImage: "map") {
+                                isMapPresented = true
+                            }
+                        }
+                        ToolbarItem(placement: .topBarLeading) {
+                            Button("Settings", systemImage: "slider.horizontal.3") {
+                                isSettingsPresented = true
+                            }
+                        }
+                        ToolbarItem(placement: .topBarTrailing) {
+                            runButton
                         }
                     }
-                }.navigationTitle("Traceroute")
-                .navigationBarTitleDisplayMode(.inline)
-                .navigationViewStyle(StackNavigationViewStyle())
-                .toolbar {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button("Map", systemImage: "map") {
-                            isMapPresented = true
+                    .sheet(isPresented: $isMapPresented) {
+                        
+                    }
+                    .sheet(isPresented: $isSettingsPresented) {
+                        NavigationView {
+                            VStack {
+                                TracerouteConfigurationView(config: $config)
+                            }
+                            .navigationTitle("Settings")
+                            .navigationBarTitleDisplayMode(.inline)
+                            .toolbar {
+                                ToolbarItem(placement: .confirmationAction) {
+                                    Button("Done") {
+                                        isSettingsPresented = false
+                                    }
+                                }
+                            }
                         }
                     }
-                    ToolbarItem(placement: .topBarTrailing) {
-                        runButton
-                    }
-                }
-                .sheet(isPresented: $isMapPresented) {
-                    
-                }
             }
-            .searchable(text: $networkAddress, prompt: "Network Address")
-            .onSubmit(of: .search) {
-                Task {
-                    await viewModel.traceroute(to: networkAddress,
-                                               packetSize: Int(config.packetSize),
-                                               initHop: UInt8(config.initHop),
-                                               maxHop: UInt8(config.maxHop),
-                                               packetCount: UInt8(config.packetCount),
-                                               timeOut: TimeInterval(config.timeOut))
-                }
-            }
+        } .frame(maxHeight: .infinity, alignment: .top)
     }
 }
