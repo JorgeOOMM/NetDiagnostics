@@ -10,7 +10,7 @@ import XCTest
 @testable import NetDiagnostics
 
 final class IPRangeTests: XCTestCase {
-    var range = IPRange()
+    var range = IPAddressRange()
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
     }

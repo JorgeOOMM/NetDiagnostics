@@ -12,14 +12,14 @@ struct PingGridView: View {
     var pings: [NetResponse]
     let columns = [
         GridItem(.flexible(minimum: 30, maximum: 30)),
-        GridItem(.flexible(minimum: 200, maximum: .infinity)),
+        GridItem(.flexible(minimum: 165, maximum: .infinity)),
         GridItem(.flexible(minimum: 30, maximum: 30)),
         GridItem(.flexible(minimum: 30, maximum: 30)),
         GridItem(.flexible(minimum: 65, maximum: 65))
     ]
     var body: some View {
         ScrollView {
-            LazyVGrid(columns: columns, spacing: 10) {
+            LazyVGrid(columns: columns, spacing:0) {
                 // Add the Grid Header
                 GridRow {
                     GridCellView(value: "Len")
@@ -37,10 +37,7 @@ struct PingGridView: View {
                         GridCellView(value: item.rtt.millisecsString)
                     }
                 }
-            } .padding(.horizontal)
+            }.padding(.leading, 0)
         }
     }
 }
-
-
-

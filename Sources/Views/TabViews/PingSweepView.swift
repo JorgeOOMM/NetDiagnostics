@@ -26,7 +26,7 @@ struct PingSweepView: View {
 #endif
     
     @State var config = PingSweepConfig()
-    @State private var disclosePingParams = true
+    @State private var discloseSweepPingParams = false
     
     @State private var viewModel: ContentView.ViewModel
     @State private var networkAddress = "113.23.179.1-113.23.179.255"
@@ -37,10 +37,12 @@ struct PingSweepView: View {
     
     var body: some View {
         NavigationStack {
+            
             PingGridView(pings: self.viewModel.pingsweeps)
+            
             Spacer()
             Group {
-                DisclosureGroup(isExpanded: $disclosePingParams) {
+                DisclosureGroup(isExpanded: $discloseSweepPingParams) {
                     Spacer()
                     NameTextOverlaySlider(name: "Len",
                                           value: $config.packetSize,
@@ -67,6 +69,13 @@ struct PingSweepView: View {
                     }
                 }
             }.navigationTitle("Ping Sweep")
+                .navigationBarTitleDisplayMode(.inline)
+                .navigationViewStyle(StackNavigationViewStyle())
+                .contentMargins(
+                              .horizontal,
+                              horizontalSizeClass == .regular ? 200 : 50,
+                              for: .automatic
+                          )
         }
         .searchable(text: $networkAddress, prompt: "Network Address")
         .onSubmit(of: .search) {

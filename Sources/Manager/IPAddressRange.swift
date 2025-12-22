@@ -1,5 +1,5 @@
 //
-//  IPRange.swift
+//  IPAddressRange.swift
 //  NetDiagnostics
 //
 //  Created by Mac on 7/12/25.
@@ -7,13 +7,13 @@
 
 // https://medium.com/@aclaytonscott/exploding-ipv4-ranges-using-swift-b7fba6c9ce28
 
-protocol IPRangeProtocol {
+protocol IPAddressProtocol {
     func IPToInt(ip: String) -> Int
     func intToIP(int: Int) -> String
     func range(lower: String, upper: String) -> [String]
 }
 
-struct IPRange: IPRangeProtocol {
+struct IPAddressRange: IPAddressProtocol {
     
     func range(lower: String, upper: String) -> [String] {
         precondition(!(lower.isEmpty || upper.isEmpty))
@@ -48,7 +48,7 @@ class IPRangeIterator: IteratorProtocol, Sequence {
     var count: Int {
         return self.range.count
     }
-    init(lower: String, upper: String, ranger: IPRangeProtocol = IPRange()) {
+    init(lower: String, upper: String, ranger: IPAddressProtocol = IPAddressRange()) {
         self.range = ranger.range(lower: lower, upper: upper)
     }
 

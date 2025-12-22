@@ -28,7 +28,7 @@ struct PingView: View {
 #endif
     
     @State var config = PingConfig()
-    @State private var disclosePingParams = true
+    @State private var disclosePingParams = false
     
     @State private var viewModel: ContentView.ViewModel
     @State private var networkAddress = "www.google.com"
@@ -75,6 +75,13 @@ struct PingView: View {
                         }
                     }
                 }.navigationTitle("Ping")
+                .navigationBarTitleDisplayMode(.inline)
+                .navigationViewStyle(StackNavigationViewStyle())
+                .contentMargins(
+                              .horizontal,
+                              horizontalSizeClass == .regular ? 200 : 50,
+                              for: .automatic
+                          )
         }
         .searchable(text: $networkAddress, prompt: "Network Address")
         .onSubmit(of: .search) {

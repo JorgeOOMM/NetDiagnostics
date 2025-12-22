@@ -38,16 +38,17 @@ extension Array where Element == [NetResponse] {
 
 //MARK: Ping format
 
-extension NetResponse {
-    func format() -> String {
+extension NetResponse: CustomDebugStringConvertible {
+    public var debugDescription: String {
         "\(self.len) bytes from \(self.from): icmp_seq=\(self.sequence) ttl=\(self.hopLimit) time=\(self.rtt.millisecsString) ms"
     }
 }
+
 extension Array where Element == NetResponse {
     func format() -> [String] {
         var result: [String] = []
         for item in self {
-            result.append(item.format())
+            result.append("\(item)")
         }
         return result
     }

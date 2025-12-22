@@ -32,5 +32,3 @@ let defaultCount: Float = 10
 let minPacketCount: Float = 1
 let maxPacketCount: Float = 100
 let defaultPacketCount: Float = 3
-
-
