@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+// MARK: TracerouteConfigurationView
 struct TracerouteConfigurationView: View {
     @Binding var config: TracerouteConfig
     @State private var discloseTracerouteParams = true
@@ -15,32 +16,29 @@ struct TracerouteConfigurationView: View {
             ScrollView {
                 Group {
                     DisclosureGroup(isExpanded: $discloseTracerouteParams) {
-                        Spacer()
+                        Divider()
                         NameTextOverlaySlider(name: "Len",
                                               value: $config.packetSize,
                                               minValue: minPacketSize,
                                               maxValue: maxPacketSize,
                                               step: 1.0)
-                        Spacer()
+                        .padding(.top, 40)
                         NameTextOverlaySlider(name: "Time",
                                               value: $config.timeOut,
                                               minValue: minTimeOut,
                                               maxValue: maxTimeOut,
                                               step: 1.0)
-                        Spacer()
-                        NameTextOverlaySlider(name: "InitHop",
-                                              value: $config.initHop,
-                                              minValue: minInitHop,
-                                              maxValue: maxInitHop,
-                                              step: 1.0)
-                        Spacer()
-                        NameTextOverlaySlider(name: "MaxHop",
+                        NameTextOverlaySlider(name: "Max Hop",
                                               value: $config.maxHop,
                                               minValue: minMaxHop,
                                               maxValue: maxMaxHop,
                                               step: 1.0)
-                        Spacer()
-                        NameTextOverlaySlider(name: "PacketCount",
+                        NameTextOverlaySlider(name: "Init Hop",
+                                              value: $config.initHop,
+                                              minValue: minInitHop,
+                                              maxValue: maxInitHop,
+                                              step: 1.0)
+                        NameTextOverlaySlider(name: "Packet Count",
                                               value: $config.packetCount,
                                               minValue: minPacketCount,
                                               maxValue: maxPacketCount,
@@ -49,11 +47,10 @@ struct TracerouteConfigurationView: View {
                         HStack {
                             Label("Parameters", systemImage: "slider.horizontal.3")
                                 .foregroundColor(.secondary)
-                            Spacer()
                         }
                     }
                 }
             }
-        }
+        }.padding(.horizontal)
     }
 }

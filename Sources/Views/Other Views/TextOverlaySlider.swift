@@ -21,7 +21,7 @@ struct SliderLabel: View {
     var value: Float
     var body: some View {
         Text(value, format: .number.precision(.fractionLength(1)))
-            .font(Font.body.lowercaseSmallCaps())
+            .font(Font.caption.lowercaseSmallCaps())
     }
 }
 
@@ -31,7 +31,7 @@ struct TextOverlaySlider: View {
     var range: ClosedRange<Float> = 0...10
     var step: Float.Stride
     @State private var isEditing = false
-    
+
     var body: some View {
         ZStack {
             // Consider this a a placeholder of the slider
@@ -71,34 +71,31 @@ struct TextOverlaySlider: View {
                             let approxButtonWidth = ratioButtonWidthToSliderHeight * height
                             let lenght = range.upperBound - range.lowerBound
                             let xOffset = CGFloat((value - range.lowerBound - (lenght / 2)) / lenght) * (width - approxButtonWidth)
-                            let yOffset = (approxButtonWidth / 2) / 2
-                            if value != range.lowerBound && value != range.upperBound {
-                                Text(value, format: .number.precision(.fractionLength(1)))
-                                    .foregroundStyle(.black)
-                                    .font(.body.monospacedDigit())
-                                    .padding(.vertical, 12)
-                                    .padding(.horizontal, 20)
-                                    .background {
-                                        Circle()
-                                            .fill(.white.opacity(0.3))
-                                    }
-                                    .fixedSize()
-                                    .frame(maxWidth: .infinity, maxHeight: height, alignment: .bottom)
-                                    .offset(x: xOffset, y: yOffset)
-                            }
+                            
+                            Text(value, format: .number.precision(.fractionLength(1)))
+                                .foregroundStyle(.black)
+                                .font(.body.monospacedDigit())
+                                .padding(.vertical, 12 / 2)
+                                .padding(.horizontal, 20 / 2)
+                                .background {
+                                    Capsule()
+                                        .fill(.white)
+                                        .stroke(.black.opacity(0.5), lineWidth: 0.5)
+                                }
+                                .fixedSize()
+                                .frame(maxWidth: .infinity, maxHeight: height, alignment: .bottom)
+                                .offset(x: xOffset, y: -height - 10)
                         }
                         .transition(.asymmetric(
                             insertion: .opacity.animation(.easeInOut(duration: 0.1)),
-                            removal: .opacity.animation(.easeInOut.delay(0.1))
+                            removal: .opacity.animation(.easeInOut.delay(0.5))
                         ))
                     }
                 }
-                // instead setting opacity,
-                // setting clear color is another alternative
-                // slider's circle remains white in this case
                 SliderLabel(value: range.upperBound)
-            }.frame(height: defaultSize)
-             .padding(.horizontal)
+            }
+            .frame(height: defaultSize)
+            .padding(.horizontal)
         }
     }
     
@@ -130,7 +127,7 @@ struct NameTextOverlaySlider: View {
     var body: some View {
         HStack {
             Text(name)
-                .font(.system(size: 16))
+                .font(.system(size: 15))
                 .foregroundColor(.black)
                 .padding(.leading, 4)
             Spacer()

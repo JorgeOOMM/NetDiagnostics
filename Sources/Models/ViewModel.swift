@@ -20,7 +20,14 @@ public struct NetResponse: Identifiable {
 }
 
 extension NetResponse {
-    static var null = NetResponse(len: 0, from: .ipv4(in_addr(s_addr: 0)), hopLimit: 0, sequence: 0, identifier: 0, rtt: 0)
+    static var null = NetResponse(
+        len: 0,
+        from: .ipv4(in_addr(s_addr: 0)),
+        hopLimit: 0,
+        sequence: 0,
+        identifier: 0,
+        rtt: 0
+    )
 }
 
 // MARK: ContentView
@@ -312,25 +319,21 @@ extension ContentView.ViewModel {
         maxHop: UInt8 = 64,
         packetCount: UInt8 = 3,
         timeOut: TimeInterval = 1.0
-    ) async {
-        do {
-            let result = try await traceroute(
-                address: address,
-                packetSize: packetSize,
-                initHop: initHop,
-                maxHop: maxHop,
-                packetCount: packetCount,
-                timeOut: timeOut
-            )
-            switch result {
-            case .success(let items):
-                self.addRoutes(items)
-            case .failure(let error):
-                self.error = error
-            }
-            
-        } catch {
-            self.error = error
+    ) async throws {
+        
+        let result = try await traceroute(
+            address: address,
+            packetSize: packetSize,
+            initHop: initHop,
+            maxHop: maxHop,
+            packetCount: packetCount,
+            timeOut: timeOut
+        )
+        switch result {
+        case .success(let items):
+            self.addRoutes(items)
+        case .failure(let error):
+            throw error
         }
     }
     
@@ -341,24 +344,21 @@ extension ContentView.ViewModel {
         maxHop: UInt8 = 64,
         packetCount: UInt8 = 3,
         timeOut: TimeInterval = 1.0
-    ) async {
-        do {
-            let result = try await traceroute(
-                hostname: hostname,
-                packetSize: packetSize,
-                initHop: initHop,
-                maxHop: maxHop,
-                packetCount: packetCount,
-                timeOut: timeOut
-            )
-            switch result {
-            case .success(let items):
-                self.addRoutes(items)
-            case .failure(let error):
-                self.error = error
-            }
-        } catch {
-            self.error = error
+    ) async throws {
+
+        let result = try await traceroute(
+            hostname: hostname,
+            packetSize: packetSize,
+            initHop: initHop,
+            maxHop: maxHop,
+            packetCount: packetCount,
+            timeOut: timeOut
+        )
+        switch result {
+        case .success(let items):
+            self.addRoutes(items)
+        case .failure(let error):
+            throw error
         }
     }
 }
