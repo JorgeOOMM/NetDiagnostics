@@ -21,50 +21,70 @@ enum TracerouteState {
     case idle
     case running(String)
     case failed(Error)
-}
-
-struct TracerouteStatusView: View {
-    @Binding var status: TracerouteState
-    @State private var showErrorPopover = false
     
-    func errorWithDetails(_ message: String, error: Error) -> any View {
-        HStack {
-            Text(message)
-            Spacer()
-            Button {
-                showErrorPopover.toggle()
-            } label: {
-                Image(systemName: "info.circle")
-            }.buttonStyle(.plain)
-            .popover(isPresented: $showErrorPopover) {
-                VStack {
-                    Text(verbatim: "\(error)")
-                    .lineLimit(nil)
-                    .padding(.all, 5)
-                    Button {
-                        showErrorPopover.toggle()
-                    } label: {
-                        Text("Dismiss").frame(maxWidth: 200)
-                    }
-                    .padding(.bottom)
-                }
-                .frame(minWidth: 400, idealWidth: 400, maxWidth: 400)
-                .fixedSize()
-            }
-        }
-    }
-    
-    var body: some View {
-        switch status {
+    var isIdle: Bool {
+        switch self {
         case .idle:
-            EmptyView()
-        case .running(let target):
-            ProgressView("Tracerouting \(target)")
-        case .failed(let error):
-            AnyView(errorWithDetails("Tracerouting error", error: error))
+            return true
+        default:
+            return false
         }
     }
 }
+//
+//struct SearchableView: View {
+//    var caption: String
+//    @Binding var searchText: String
+//    var action: (() -> Void)
+//    @FocusState private var isSearchFocused: Bool // Track focus state
+//    @State private var active = false
+//    
+//    func borderStyle() -> some ShapeStyle {
+//        LinearGradient(
+//            colors: [.white.opacity(0.5), .gray.opacity(0.5)],
+//            startPoint: .topLeading,
+//            endPoint: .bottomTrailing
+//        )
+//    }
+//    var body: some View {
+//        HStack {
+//            HStack {
+//                Image(systemName: "magnifyingglass").foregroundColor(.gray)
+//                TextField(caption, text: $searchText, onEditingChanged: { editing in
+//                    withAnimation {
+//                        active = editing
+//                    }
+//                })
+//                .focused($isSearchFocused) // Track focus state
+//                .padding(.horizontal, 10)
+//                .padding(.vertical, 8)
+//                .onSubmit {
+//                    action()
+//                }
+//            }
+//            .padding(.horizontal)
+//            .background(Color(.systemBackground))
+//            .cornerRadius(10)
+//            .overlay(RoundedRectangle(cornerRadius: 10).stroke(borderStyle(), lineWidth: 1.5))
+//            
+//            if isSearchFocused {
+//                Button("Cancel") {
+//                    searchText = ""
+//                    withAnimation(.spring()) {
+//                        isSearchFocused = false
+//                    }
+//                }
+//                .transition(.move(edge: .trailing)) // Add animation for cancel button
+//            }
+//        }
+//        .frame(maxWidth: .infinity)
+//        .padding(.horizontal)
+//        .navigationBarHidden(active)
+//        // Add animation for navigationBarHidden
+//        .animation(.spring(response: 0.5, dampingFraction: 1.5, blendDuration: 1.5), value: active)
+//    }
+//}
+
 
 
 
@@ -95,7 +115,7 @@ struct TracerouteView: View {
             Button(action: run) { Label("Run", systemImage: "play.fill") }
                 .keyboardShortcut("R")
         case .running:
-            ProgressView().controlSize(.small).progressViewStyle(.circular).padding(.trailing, 6)
+            ProgressView().progressViewStyle(.circular).padding(.trailing, 6)
         }
     }
     
@@ -121,6 +141,7 @@ struct TracerouteView: View {
             }
         }
     }
+
     
     var body: some View {
         NavigationStack {
@@ -129,7 +150,11 @@ struct TracerouteView: View {
                     run()
                 }
                 TracerouteGridView(route: self.viewModel.route)
-                TracerouteStatusView(status: $tracerouteState)
+                //ZStack(alignment: .bottom) {
+                    TracerouteStatusView(status: $tracerouteState)
+                    .transition(.move(edge: .trailing)) // Add animation for status view
+                    .animation(.spring(response: 0.5, dampingFraction: 1.5, blendDuration: 1.5), value: tracerouteState.isIdle)
+                //}
             }
             .navigationTitle("Traceroute")
             .navigationBarTitleDisplayMode(.inline)

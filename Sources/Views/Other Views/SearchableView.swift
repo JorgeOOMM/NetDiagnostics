@@ -13,6 +13,14 @@ struct SearchableView: View {
     var action: (() -> Void)
     @FocusState private var isSearchFocused: Bool // Track focus state
     @State private var active = false
+    
+    func borderStyle() -> some ShapeStyle {
+        LinearGradient(
+            colors: [.white.opacity(0.5), .gray.opacity(0.5)],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
     var body: some View {
         HStack {
             HStack {
@@ -28,11 +36,18 @@ struct SearchableView: View {
                 .onSubmit {
                     action()
                 }
+                Button {
+                    searchText = ""
+                } label: {
+                    Image(systemName: "multiply.circle.fill")
+                        .foregroundColor(.gray)
+                        .symbolEffect(.bounce)
+                }.buttonStyle(.plain)
             }
             .padding(.horizontal)
             .background(Color(.systemBackground))
             .cornerRadius(10)
-            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.gray.opacity(0.2), lineWidth: 1))
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(borderStyle(), lineWidth: 1.5))
             
             if isSearchFocused {
                 Button("Cancel") {
@@ -48,6 +63,6 @@ struct SearchableView: View {
         .padding(.horizontal)
         .navigationBarHidden(active)
         // Add animation for navigationBarHidden
-        .animation(.spring(response: 1.5, dampingFraction: 2.5, blendDuration: 2.5), value: active)
+        .animation(.spring(response: 0.5, dampingFraction: 1.5, blendDuration: 1.5), value: active)
     }
 }

@@ -16,15 +16,6 @@ var defaultSize: CGFloat = {
 #endif
 }()
 
-// MARK: SliderLabel
-struct SliderLabel: View {
-    var value: Float
-    var body: some View {
-        Text(value, format: .number.precision(.fractionLength(1)))
-            .font(Font.caption.lowercaseSmallCaps())
-    }
-}
-
 // MARK: TextOverlaySlider
 struct TextOverlaySlider: View {
     @Binding var value: Float
@@ -110,10 +101,13 @@ struct TextOverlaySlider: View {
 
 extension TextOverlaySlider {
     func borderStyle() -> some ShapeStyle {
-        LinearGradient(colors: [.white.opacity(0.5), .gray.opacity(0.5)], startPoint: .topLeading, endPoint: .bottomTrailing)
+        LinearGradient(
+            colors: [.white.opacity(0.5), .gray.opacity(0.5)],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
     }
 }
-
 
 // MARK: NameTextOverlaySlider
 struct NameTextOverlaySlider: View {
