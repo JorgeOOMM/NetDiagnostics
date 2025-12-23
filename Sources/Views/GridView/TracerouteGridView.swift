@@ -59,6 +59,20 @@ struct TracerouteGridView: View {
     private let lookup = IPAddressGeolocationLookup()
     @State private var orientation = UIDeviceOrientation.unknown
     
+    var headerPortrait: some View {
+        LazyVGrid(
+            columns: columnsPortrait,
+            alignment: .leading,
+            spacing: 0
+        ) {
+            GridCellView(value: "From") // Hop Details
+            GridCellView(value: "")   // Flag
+            GridCellView(value: "RTT1") // Round Trip Time Attempt 1
+            GridCellView(value: "RTT2") // Round Trip Time Attempt 2
+            GridCellView(value: "RTT3") // Round Trip Time Attempt 3
+        }
+    }
+    
     @ViewBuilder
     fileprivate func landscapeGridRowForHop(_ index: Int, _ hop: [NetResponse]) -> some View {
         let hopIndex = index + 1
@@ -185,13 +199,13 @@ struct TracerouteGridView: View {
                     pinnedViews: [.sectionHeaders]
                 ) {
                     // Add the Grid Header
-                    //Section(header: TracerouteGridHeaderViewPortrait()) {
-                    TracerouteGridHeaderViewPortrait()
+                    Section(header: headerPortrait) {
+                    //TracerouteGridHeaderViewPortrait()
                     ForEach(route.indices, id: \.self) { index in
                         let hop = route[index]
                         portraitGridRowForHop(hop)
                     }
-                    //}
+                    }
                 }
             }
             
