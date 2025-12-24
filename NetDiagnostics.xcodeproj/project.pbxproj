@@ -30,6 +30,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		046F76652EFBCBF10024A764 /* NetDiagnostics-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "NetDiagnostics-Info.plist"; sourceTree = "<group>"; };
 		048C8E822ED79E38006AC581 /* NetDiagnostics.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NetDiagnostics.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		048C8E922ED79E3B006AC581 /* NetDiagnosticsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NetDiagnosticsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		048C8E9C2ED79E3B006AC581 /* NetDiagnosticsUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NetDiagnosticsUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -84,6 +85,7 @@
 		048C8E792ED79E38006AC581 = {
 			isa = PBXGroup;
 			children = (
+				046F76652EFBCBF10024A764 /* NetDiagnostics-Info.plist */,
 				048C8E842ED79E38006AC581 /* Sources */,
 				048C8E952ED79E3B006AC581 /* NetDiagnosticsTests */,
 				048C8E9F2ED79E3B006AC581 /* NetDiagnosticsUITests */,
@@ -438,6 +440,7 @@
 				DEVELOPMENT_TEAM = 9LCWBZHZFL;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "NetDiagnostics-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -467,6 +470,7 @@
 				DEVELOPMENT_TEAM = 9LCWBZHZFL;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "NetDiagnostics-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

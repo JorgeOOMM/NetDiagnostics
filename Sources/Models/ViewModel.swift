@@ -6,29 +6,52 @@
 
 import Foundation
 import NetDiagnosis
+import IPAddress2City
 
 
-// MARK: NetResponse
-public struct NetResponse: Identifiable {
-    public var id = UUID()
-    public var len: Int
-    public var from: IPAddr
-    public var hopLimit: Int
-    public var sequence: Int
-    public var identifier: Int
-    public var rtt: TimeInterval
+// MARK: TracerouteConfig
+struct TracerouteConfig {
+    // Traceroute configuration
+    var packetSize: Float = defaultPacketSize
+    var initHop: Float = minInitHop
+    var maxHop: Float = defaultMaxHop
+    var packetCount: Float = defaultPacketCount
+    var timeOut: Float = defaultTimeOut
 }
 
-extension NetResponse {
-    static var null = NetResponse(
-        len: 0,
-        from: .ipv4(in_addr(s_addr: 0)),
-        hopLimit: 0,
-        sequence: 0,
-        identifier: 0,
-        rtt: 0
-    )
+
+// MARK: GeoAddress
+public struct GeoAddress {
+    public let address: String
+    public let start: String
+    public let end: String
+    public let country: String
+    public let flag: String
+    public let subdiv: String
+    public var locationName: String {
+        subdiv + " - " + country
+    }
 }
+
+// MARK: GeoAddressLookupProtocol
+protocol GeoAddressLookupProtocol {
+    func locate(with address: String) throws -> GeoAddress
+}
+
+// MARK: GeoAddressLookup: GeoAddressLookupProtocol
+extension GeoAddressLookup: GeoAddressLookupProtocol {
+    public func locate(with address: String) throws -> GeoAddress {
+        GeoAddress(
+            address: address,
+            start: try country(for: address),
+            end: try flag(for: address),
+            country: try start(for: address),
+            flag: try end(for: address),
+            subdiv: try subdivision(for: address)
+        )
+    }
+}
+
 
 // MARK: ContentView
 extension ContentView {
@@ -39,13 +62,26 @@ extension ContentView {
         private(set) var pings: [NetResponse] = []
         private(set) var pingsweeps: [NetResponse] = []
         private(set) var ping: NetResponse = .null
+        private(set) var currentIPAddress: String?
         
-        internal var network: NetDiagnosticsProtocol
+        internal let network: NetDiagnosticsProtocol
+        internal let addressGetter: CurrentIPAddressGetterProtocol
+        internal let geolookup: GeoAddressLookupProtocol
         
-        init(network: NetDiagnosticsProtocol = NetDiagManager()) {
+        init(network: NetDiagnosticsProtocol = NetDiagManager(),
+             addressGetter: CurrentIPAddressGetterProtocol = CurrentIPAddressDYNDNSGetter(),
+             geolookup: GeoAddressLookupProtocol = GeoAddressLookup()) {
             self.network = network
+            self.addressGetter = addressGetter
+            self.geolookup = geolookup
         }
         
+        func getCurrentIPAddressIfNeeded() async throws {
+            if currentIPAddress == nil {
+                currentIPAddress = try await addressGetter.currentAddress()
+            }
+        }
+            
         fileprivate func addPing(_ item: Pinger.Response) {
             let ping = NetResponse(
                 len: item.len,
@@ -122,7 +158,6 @@ extension ContentView.ViewModel {
         hopLimit: UInt8? = nil,
         timeOut: TimeInterval = 1.0
     ) async throws -> Result<Pinger.Response, Error> {
-        precondition(!hostname.isEmpty)
         do {
             // Also support IPv6 address
             // let remoteAddr = IPAddr.create("2620:1ec:c11::200", addressFamily: .ipv6)
@@ -150,7 +185,6 @@ extension ContentView.ViewModel {
         hopLimit: UInt8? = nil,
         timeOut: TimeInterval = 1.0
     ) async throws -> Result<Pinger.Response, Error> {
-        precondition(!address.isEmpty)
         do {
             // Also support IPv6 address
             // let remoteAddr = IPAddr.create("2620:1ec:c11::200", addressFamily: .ipv6)
@@ -199,8 +233,7 @@ extension ContentView.ViewModel {
         packetSize: Int? = nil,
         hopLimit: UInt8? = nil,
         timeOut: TimeInterval = 1.0
-    ) async {
-        do {
+    ) async throws {
             let result = try await ping(
                 address: address,
                 packetSize: packetSize,
@@ -211,11 +244,9 @@ extension ContentView.ViewModel {
             case .success(let item):
                 self.addPing(item)
             case .failure(let error):
-                self.error = error
+                throw error
             }
-        } catch {
-            self.error = error
-        }
+
     }
     
     func ping(
@@ -223,30 +254,24 @@ extension ContentView.ViewModel {
         packetSize: Int? = nil,
         hopLimit: UInt8? = nil,
         timeOut: TimeInterval = 1.0
-    ) async {
-        do {
-            let result = try await ping(
-                hostname: hostname,
-                packetSize: packetSize,
-                hopLimit: hopLimit,
-                timeOut: timeOut
-            )
-            switch result {
-            case .success(let item):
-                self.addPing(item)
-            case .failure(let error):
-                self.error = error
-            }
-            
-        } catch {
-            self.error = error
+    ) async throws {
+        let result = try await ping(
+            hostname: hostname,
+            packetSize: packetSize,
+            hopLimit: hopLimit,
+            timeOut: timeOut
+        )
+        switch result {
+        case .success(let item):
+            self.addPing(item)
+        case .failure(let error):
+            throw error
         }
     }
 }
 
 // MARK: ContentView.ViewModel
 extension ContentView.ViewModel {
-    
     // MARK: Traceroute -> Result<[[Pinger.Response]], Error>
     private func traceroute(
         address: String,
@@ -256,7 +281,6 @@ extension ContentView.ViewModel {
         packetCount: UInt8 = 3,
         timeOut: TimeInterval = 1.0
     ) async throws -> Result<[[Pinger.Response]], Error> {
-        precondition(!address.isEmpty)
         do {
             // Also support IPv6 address
             // let remoteAddr = IPAddr.create("2620:1ec:c11::200", addressFamily: .ipv6)
@@ -287,7 +311,6 @@ extension ContentView.ViewModel {
         packetCount: UInt8 = 3,
         timeOut: TimeInterval = 1.0
     ) async throws -> Result<[[Pinger.Response]], Error> {
-        precondition(!hostname.isEmpty)
         do {
             // Also support IPv6 address
             // let remoteAddr = IPAddr.create("2620:1ec:c11::200", addressFamily: .ipv6)
@@ -314,20 +337,15 @@ extension ContentView.ViewModel {
     
     func traceroute(
         _ address: String,
-        packetSize: Int? = nil,
-        initHop: UInt8 = 1,
-        maxHop: UInt8 = 64,
-        packetCount: UInt8 = 3,
-        timeOut: TimeInterval = 1.0
+        config: TracerouteConfig
     ) async throws {
-        
         let result = try await traceroute(
             address: address,
-            packetSize: packetSize,
-            initHop: initHop,
-            maxHop: maxHop,
-            packetCount: packetCount,
-            timeOut: timeOut
+            packetSize: Int(config.packetSize),
+            initHop: UInt8(config.initHop),
+            maxHop: UInt8(config.maxHop),
+            packetCount: UInt8(config.packetCount),
+            timeOut: TimeInterval(config.timeOut)
         )
         switch result {
         case .success(let items):
@@ -339,20 +357,15 @@ extension ContentView.ViewModel {
     
     func traceroute(
         to hostname: String,
-        packetSize: Int? = nil,
-        initHop: UInt8 = 1,
-        maxHop: UInt8 = 64,
-        packetCount: UInt8 = 3,
-        timeOut: TimeInterval = 1.0
+        config: TracerouteConfig
     ) async throws {
-
         let result = try await traceroute(
             hostname: hostname,
-            packetSize: packetSize,
-            initHop: initHop,
-            maxHop: maxHop,
-            packetCount: packetCount,
-            timeOut: timeOut
+            packetSize: Int(config.packetSize),
+            initHop: UInt8(config.initHop),
+            maxHop: UInt8(config.maxHop),
+            packetCount: UInt8(config.packetCount),
+            timeOut: TimeInterval(config.timeOut)
         )
         switch result {
         case .success(let items):

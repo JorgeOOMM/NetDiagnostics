@@ -99,9 +99,7 @@ enum ValidationError: LocalizedError {
     }
 }
 
-
 #Preview {
- 
     @Previewable var error: TracerouteState = .failed(ValidationError.missingAddress)
     @Previewable var status: TracerouteState = .running("www.google.com")
     TracerouteStatusView(status: .constant(status))

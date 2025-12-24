@@ -6,16 +6,9 @@
 //
 
 import SwiftUI
+import IPAddress2City
 
-// MARK: TracerouteConfig
-struct TracerouteConfig {
-    // Traceroute configuration
-    var packetSize: Float = defaultPacketSize
-    var initHop: Float = minInitHop
-    var maxHop: Float = defaultMaxHop
-    var packetCount: Float = defaultPacketCount
-    var timeOut: Float = defaultTimeOut
-}
+
 
 enum TracerouteState {
     case idle
@@ -31,61 +24,6 @@ enum TracerouteState {
         }
     }
 }
-//
-//struct SearchableView: View {
-//    var caption: String
-//    @Binding var searchText: String
-//    var action: (() -> Void)
-//    @FocusState private var isSearchFocused: Bool // Track focus state
-//    @State private var active = false
-//    
-//    func borderStyle() -> some ShapeStyle {
-//        LinearGradient(
-//            colors: [.white.opacity(0.5), .gray.opacity(0.5)],
-//            startPoint: .topLeading,
-//            endPoint: .bottomTrailing
-//        )
-//    }
-//    var body: some View {
-//        HStack {
-//            HStack {
-//                Image(systemName: "magnifyingglass").foregroundColor(.gray)
-//                TextField(caption, text: $searchText, onEditingChanged: { editing in
-//                    withAnimation {
-//                        active = editing
-//                    }
-//                })
-//                .focused($isSearchFocused) // Track focus state
-//                .padding(.horizontal, 10)
-//                .padding(.vertical, 8)
-//                .onSubmit {
-//                    action()
-//                }
-//            }
-//            .padding(.horizontal)
-//            .background(Color(.systemBackground))
-//            .cornerRadius(10)
-//            .overlay(RoundedRectangle(cornerRadius: 10).stroke(borderStyle(), lineWidth: 1.5))
-//            
-//            if isSearchFocused {
-//                Button("Cancel") {
-//                    searchText = ""
-//                    withAnimation(.spring()) {
-//                        isSearchFocused = false
-//                    }
-//                }
-//                .transition(.move(edge: .trailing)) // Add animation for cancel button
-//            }
-//        }
-//        .frame(maxWidth: .infinity)
-//        .padding(.horizontal)
-//        .navigationBarHidden(active)
-//        // Add animation for navigationBarHidden
-//        .animation(.spring(response: 0.5, dampingFraction: 1.5, blendDuration: 1.5), value: active)
-//    }
-//}
-
-
 
 
 // MARK: TracerouteView
@@ -108,6 +46,7 @@ struct TracerouteView: View {
     @State private var viewModel: ContentView.ViewModel
     @State private var networkAddress = "www.bing.kr"
     @State private var tracerouteState: TracerouteState = .idle
+    //private let lookup = GeoAddressLookup()
     
     @ViewBuilder var runButton: some View {
         switch tracerouteState {
@@ -125,15 +64,15 @@ struct TracerouteView: View {
     
     func run() {
         tracerouteState = .running(networkAddress)
+        
         Task {
+            // Get the current IP address for the bogon address cases
+            try await viewModel.getCurrentIPAddressIfNeeded()
+            
             do {
                 try await viewModel.traceroute(
                     to: networkAddress,
-                    packetSize: Int(config.packetSize),
-                    initHop: UInt8(config.initHop),
-                    maxHop: UInt8(config.maxHop),
-                    packetCount: UInt8(config.packetCount),
-                    timeOut: TimeInterval(config.timeOut)
+                    config: config
                 )
                 tracerouteState = .idle
             } catch {
@@ -149,12 +88,10 @@ struct TracerouteView: View {
                 SearchableView(caption: "Network Address", searchText: $networkAddress) {
                     run()
                 }
-                TracerouteGridView(route: self.viewModel.route)
-                //ZStack(alignment: .bottom) {
-                    TracerouteStatusView(status: $tracerouteState)
-                    .transition(.move(edge: .trailing)) // Add animation for status view
-                    .animation(.spring(response: 0.5, dampingFraction: 1.5, blendDuration: 1.5), value: tracerouteState.isIdle)
-                //}
+                TracerouteGridView(viewModel: self.viewModel)
+                TracerouteStatusView(status: $tracerouteState)
+                .transition(.move(edge: .trailing)) // Add animation for status view
+                .animation(.spring(response: 0.5, dampingFraction: 1.5, blendDuration: 1.5), value: tracerouteState.isIdle)
             }
             .navigationTitle("Traceroute")
             .navigationBarTitleDisplayMode(.inline)
@@ -175,6 +112,13 @@ struct TracerouteView: View {
                 }
             }
             .sheet(isPresented: $isMapPresented) {
+//                let result = self.viewModel.route.compactMap {
+//                    if !$0.isEmpty {
+//                        return try? AddressElement(address: "\($0[0].from)", lookup: lookup)
+//                    }
+//                    return nil
+//                }
+                
                 
             }
             .sheet(isPresented: $isSettingsPresented) {
