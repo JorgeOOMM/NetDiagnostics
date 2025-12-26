@@ -8,29 +8,33 @@ import Foundation
 import NetDiagnosis
 import IPAddress2City
 
-
-// MARK: TracerouteConfig
-struct TracerouteConfig {
-    // Traceroute configuration
-    var packetSize: Float = defaultPacketSize
-    var initHop: Float = minInitHop
-    var maxHop: Float = defaultMaxHop
-    var packetCount: Float = defaultPacketCount
-    var timeOut: Float = defaultTimeOut
+// MARK: GeoAddress
+public struct GeoAddress : Identifiable {
+    public let id = UUID()
+    // Current Address
+    public let address: String
+    // Start Range Address
+    public let start: String
+    // End Range Address
+    public let end: String
+    // Country for Range Address
+    public let country: String
+    // Country Flag for Range Address
+    public let flag: String
+    // Country Subdivision for Range Address
+    public let subdivision: String
+    // Complete location name
+    public var locationName: String {
+        subdivision + " - " + country
+    }
+    // Subdivisions
+    public var subdivisions: [String] {
+        subdivision.components(separatedBy: " - ")
+    }
 }
 
-
-// MARK: GeoAddress
-public struct GeoAddress {
-    public let address: String
-    public let start: String
-    public let end: String
-    public let country: String
-    public let flag: String
-    public let subdiv: String
-    public var locationName: String {
-        subdiv + " - " + country
-    }
+enum GeoAddressError: Error {
+    case localAddressError
 }
 
 // MARK: GeoAddressLookupProtocol
@@ -43,15 +47,14 @@ extension GeoAddressLookup: GeoAddressLookupProtocol {
     public func locate(with address: String) throws -> GeoAddress {
         GeoAddress(
             address: address,
-            start: try country(for: address),
-            end: try flag(for: address),
-            country: try start(for: address),
-            flag: try end(for: address),
-            subdiv: try subdivision(for: address)
+            start: try start(for: address),
+            end: try end(for: address),
+            country: try country(for: address),
+            flag: try flag(for: address),
+            subdivision: try subdivision(for: address)
         )
     }
 }
-
 
 // MARK: ContentView
 extension ContentView {
@@ -59,28 +62,28 @@ extension ContentView {
     class ViewModel {
         private(set) var error: Error?
         private(set) var route: [[NetResponse]] = []
+        private(set) var listOfGeoAddresses: [String: GeoAddress] = [:]
         private(set) var pings: [NetResponse] = []
         private(set) var pingsweeps: [NetResponse] = []
         private(set) var ping: NetResponse = .null
-        private(set) var currentIPAddress: String?
-        
+        private(set) var geoAddress: GeoAddress?
         internal let network: NetDiagnosticsProtocol
-        internal let addressGetter: CurrentIPAddressGetterProtocol
+        internal let localAddressGetter: CurrentIPAddressGetterProtocol
         internal let geolookup: GeoAddressLookupProtocol
+    
         
         init(network: NetDiagnosticsProtocol = NetDiagManager(),
-             addressGetter: CurrentIPAddressGetterProtocol = CurrentIPAddressDYNDNSGetter(),
-             geolookup: GeoAddressLookupProtocol = GeoAddressLookup()) {
+             localAddressGetter: CurrentIPAddressGetterProtocol = CurrentIPAddressDYNDNSGetter(),
+             geolookup: GeoAddressLookupProtocol = GeoAddressLookup()
+        ) {
+            
             self.network = network
-            self.addressGetter = addressGetter
+            self.localAddressGetter = localAddressGetter
             self.geolookup = geolookup
+            
+            localSetup()
         }
-        
-        func getCurrentIPAddressIfNeeded() async throws {
-            if currentIPAddress == nil {
-                currentIPAddress = try await addressGetter.currentAddress()
-            }
-        }
+
             
         fileprivate func addPing(_ item: Pinger.Response) {
             let ping = NetResponse(
@@ -128,10 +131,15 @@ extension ContentView {
         
         fileprivate func addRoutes(_ items: [[Pinger.Response]] ) {
             var route: [[NetResponse]] = []
+            var geoAddress: [String: GeoAddress] = [:]
             for item in items {
                 if item.isEmpty {
                     route.append([])
                 } else {
+                    let currentAddress = "\(item[0].from)"
+                    if let current = try? locateGeoAddress(with: currentAddress) {
+                        geoAddress[currentAddress] = current
+                    }
                     route.append(item.map { response in
                         NetResponse(
                             len: response.len,
@@ -145,6 +153,7 @@ extension ContentView {
                 }
             }
             self.route = route
+            self.listOfGeoAddresses = geoAddress
         }
     }
 }
@@ -334,18 +343,23 @@ extension ContentView.ViewModel {
             return .failure(error)
         }
     }
-    
+     
     func traceroute(
         _ address: String,
-        config: TracerouteConfig
+        packetSize: Int? = nil,
+        initHop: UInt8 = 1,
+        maxHop: UInt8 = 64,
+        packetCount: UInt8 = 3,
+        timeOut: TimeInterval = 1.0
     ) async throws {
+        
         let result = try await traceroute(
             address: address,
-            packetSize: Int(config.packetSize),
-            initHop: UInt8(config.initHop),
-            maxHop: UInt8(config.maxHop),
-            packetCount: UInt8(config.packetCount),
-            timeOut: TimeInterval(config.timeOut)
+            packetSize: packetSize,
+            initHop: initHop,
+            maxHop: maxHop,
+            packetCount: packetCount,
+            timeOut: timeOut
         )
         switch result {
         case .success(let items):
@@ -357,15 +371,20 @@ extension ContentView.ViewModel {
     
     func traceroute(
         to hostname: String,
-        config: TracerouteConfig
+        packetSize: Int? = nil,
+        initHop: UInt8 = 1,
+        maxHop: UInt8 = 64,
+        packetCount: UInt8 = 3,
+        timeOut: TimeInterval = 1.0
     ) async throws {
+
         let result = try await traceroute(
             hostname: hostname,
-            packetSize: Int(config.packetSize),
-            initHop: UInt8(config.initHop),
-            maxHop: UInt8(config.maxHop),
-            packetCount: UInt8(config.packetCount),
-            timeOut: TimeInterval(config.timeOut)
+            packetSize: packetSize,
+            initHop: initHop,
+            maxHop: maxHop,
+            packetCount: packetCount,
+            timeOut: timeOut
         )
         switch result {
         case .success(let items):
@@ -419,8 +438,9 @@ extension ContentView.ViewModel {
         hopLimit: UInt8? = nil,
         timeOut: TimeInterval = 1.0
     ) async throws {
+        let range = try IPAddressRangeCollection(lower: source, upper: target)
         let result = try await withThrowingTaskGroup(of: Result<Pinger.Response, Error>.self) { group in
-            for current in IPRangeIterator(lower: source, upper: target) {
+            for current in range {
                 group.addTask {
                     try await self.ping(
                         address: current,
@@ -440,5 +460,39 @@ extension ContentView.ViewModel {
             }
         }
         self.addSweepPings(result)
+    }
+}
+
+
+extension ContentView.ViewModel {
+    func localSetup() {
+        Task {
+            do {
+                // Get the local IP address for the bogon address cases
+                self.geoAddress = try await localGeoAddress()
+                
+            } catch {
+                print(error)
+            }
+        }
+    }
+    
+    func locateGeoAddress(with address: String) throws -> GeoAddress {
+        if try IPAddressUtilities.isBogon(string: address) {
+            if let geoAddress = geoAddress {
+                return geoAddress
+            } else {
+                throw GeoAddressError.localAddressError
+            }
+        }
+        return try geolookup.locate(with: address)
+    }
+    
+    /// Get the local GeoAddress
+    func localGeoAddress() async throws -> GeoAddress? {
+        if let localIPAddress = try await localAddressGetter.currentAddress() {
+            return try locateGeoAddress(with: localIPAddress)
+        }
+        return nil
     }
 }

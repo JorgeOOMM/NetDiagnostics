@@ -11,6 +11,7 @@ import Foundation
 // MARK: CurrentIPAddressGetterProtocol
 protocol CurrentIPAddressGetterProtocol {
     var getterURL: String {get}
+    
     func query() async throws -> String?
     func currentAddress() async throws -> String?
 }

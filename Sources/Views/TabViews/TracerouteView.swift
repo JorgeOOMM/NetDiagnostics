@@ -9,6 +9,15 @@ import SwiftUI
 import IPAddress2City
 
 
+// MARK: TracerouteConfig
+struct TracerouteConfig {
+    // Traceroute configuration
+    var packetSize: Float = defaultPacketSize
+    var initHop: Float = minInitHop
+    var maxHop: Float = defaultMaxHop
+    var packetCount: Float = defaultPacketCount
+    var timeOut: Float = defaultTimeOut
+}
 
 enum TracerouteState {
     case idle
@@ -46,7 +55,6 @@ struct TracerouteView: View {
     @State private var viewModel: ContentView.ViewModel
     @State private var networkAddress = "www.bing.kr"
     @State private var tracerouteState: TracerouteState = .idle
-    //private let lookup = GeoAddressLookup()
     
     @ViewBuilder var runButton: some View {
         switch tracerouteState {
@@ -66,13 +74,14 @@ struct TracerouteView: View {
         tracerouteState = .running(networkAddress)
         
         Task {
-            // Get the current IP address for the bogon address cases
-            try await viewModel.getCurrentIPAddressIfNeeded()
-            
             do {
                 try await viewModel.traceroute(
                     to: networkAddress,
-                    config: config
+                    packetSize: Int(config.packetSize),
+                    initHop: UInt8(config.initHop),
+                    maxHop: UInt8(config.maxHop),
+                    packetCount: UInt8(config.packetCount),
+                    timeOut: TimeInterval(config.timeOut)
                 )
                 tracerouteState = .idle
             } catch {

@@ -9,16 +9,15 @@ import SwiftUI
  
 // MARK: GridCellViewProtocol
 protocol GridCellViewProtocol {
+    associatedtype CellViewType: View
+    
     var value: String {get}
-    
-    associatedtype AssocType: View
-    
-    var body: AssocType {get}
+    var body: CellViewType {get}
 }
 
 extension GridCellViewProtocol {
     var body: some View {
-        //VStack(alignment: .center) {
+        //VStack(alignment: .leading) {
             Text(value)
                 .font(.system(size: 16))
                 .foregroundColor(.black)
