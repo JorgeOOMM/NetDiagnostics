@@ -35,7 +35,7 @@ struct TracerouteGridView: View {
             GridCellView(value: "RTT3")      // Round Trip Time Attempt 3
         }
     }
-
+    
     var body: some View {
         ScrollView(.horizontal) {
             ScrollView(.vertical) {
@@ -43,7 +43,7 @@ struct TracerouteGridView: View {
                     columns: columns,
                     alignment: .leading,
                     spacing: 0,
-                    pinnedViews: [.sectionHeaders]
+                    pinnedViews: [.sectionHeaders, .sectionFooters]
                 ) {
                     // Add the Grid Header
                     Section(header: header) {
@@ -63,50 +63,42 @@ struct TracerouteGridView: View {
                             } else {
                                 let from = "\(hop[0].from)"
                                 let current = viewModel.listOfGeoAddresses[from]
-                                if hop.count == 3 {
-                                    GridRow {
+                                // Clickeable grid row
+                                GridRow {
+                                    if hop.count == 3 {
                                         GridCellView(value: "\(hopIndex)")
                                         GridCellView(value: from)
                                         GridCellView(value: "\(current?.flag ?? "")")
                                         GridCellView(value: hop[0].rtt.millisecsString)
                                         GridCellView(value: hop[1].rtt.millisecsString)
                                         GridCellView(value: hop[2].rtt.millisecsString)
-                                    }.contentShape(Rectangle())
-                                    .onTapGesture {
-                                        self.selectedItem = current
-                                    }
-                                } else if hop.count == 2 {
-                                    GridRow {
+                                    } else if hop.count == 2 {
                                         GridCellView(value: "\(hopIndex)")
                                         GridCellView(value: from)
                                         GridCellView(value: "\(current?.flag ?? "")")
                                         GridCellView(value: hop[0].rtt.millisecsString)
                                         GridCellView(value: hop[1].rtt.millisecsString)
                                         GridCellView(value: "***")
-                                   }.contentShape(Rectangle())
-                                    .onTapGesture {
-                                        self.selectedItem = current
-                                    }
-                                } else if hop.count == 1 {
-                                    GridRow {
+                                    } else if hop.count == 1 {
                                         GridCellView(value: "\(hopIndex)")
                                         GridCellView(value: from)
                                         GridCellView(value: "\(current?.flag ?? "")")
                                         GridCellView(value: hop[0].rtt.millisecsString)
                                         GridCellView(value: "***")
                                         GridCellView(value: "***")
-                                    }.contentShape(Rectangle())
-                                     .onTapGesture {
-                                         self.selectedItem = current
-                                     }
+                                    }
+                                }
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    self.selectedItem = current
                                 }
                             }
                         }
                     }
-                }.sheet(item: $selectedItem) { item in
-                    TracerouteMapView(address: item)
                 }
+            }.sheet(item: $selectedItem) { item in
+                TracerouteGeoAddressMapView(address: item)
             }
-        }
+        }.toolbarBackground(.visible, for: .tabBar)
     }
 }

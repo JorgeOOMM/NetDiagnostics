@@ -1,5 +1,5 @@
 //
-//  TracerouteMapView.swift
+//  TracerouteGeoAddressMapView.swift
 //  IPAddress2CityExample
 //
 //  Created by Mac on 14/12/25.
@@ -25,8 +25,8 @@ extension CLLocationCoordinate2D {
     )
 }
 
-// MARK: TracerouteMapView
-struct TracerouteMapView: View {
+// MARK: TracerouteGeoAddressMapView
+struct TracerouteGeoAddressMapView: View {
     let address: GeoAddress
     @State private var location = MapLocation(name: "New York", coordinate: .newYork)
     @State private var position = MapCameraPosition.region(
@@ -40,8 +40,10 @@ struct TracerouteMapView: View {
         VStack {
             Divider()
             Text(address.address)
-            Text(address.start)
-            Text(address.end)
+            HStack {
+                Text(address.start)
+                Text(address.end)
+            }
             HStack {
                 Text(address.country)
                 Text(address.flag)
