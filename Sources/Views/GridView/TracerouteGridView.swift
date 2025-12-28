@@ -62,7 +62,7 @@ struct TracerouteGridView: View {
                                 }
                             } else {
                                 let from = "\(hop[0].from)"
-                                let current = viewModel.listOfGeoAddresses[from]
+                                let current = viewModel.getGeoAddress(from)
                                 // Clickeable grid row
                                 GridRow {
                                     if hop.count == 3 {

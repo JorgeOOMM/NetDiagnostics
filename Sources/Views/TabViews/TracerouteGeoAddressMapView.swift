@@ -11,13 +11,6 @@ import SwiftUI
 import IPAddress2City
 
 
-// MARK: MapLocation
-struct MapLocation: Identifiable {
-    let id = UUID()
-    let name: String
-    let coordinate: CLLocationCoordinate2D
-}
-
 extension CLLocationCoordinate2D {
     static let newYork: Self = .init(
         latitude: 40.730610,

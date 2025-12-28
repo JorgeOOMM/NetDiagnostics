@@ -121,14 +121,20 @@ struct TracerouteView: View {
                 }
             }
             .sheet(isPresented: $isMapPresented) {
-//                let result = self.viewModel.route.compactMap {
-//                    if !$0.isEmpty {
-//                        return try? AddressElement(address: "\($0[0].from)", lookup: lookup)
-//                    }
-//                    return nil
-//                }
-                
-                
+                NavigationView {
+                    VStack {
+                        TracerouteMapView(viewModel: viewModel)
+                    }
+                    .navigationTitle("Map")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Done") {
+                                isMapPresented = false
+                            }
+                        }
+                    }
+                }
             }
             .sheet(isPresented: $isSettingsPresented) {
                 NavigationView {

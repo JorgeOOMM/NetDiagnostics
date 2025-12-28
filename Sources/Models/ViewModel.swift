@@ -5,8 +5,17 @@
 //
 
 import Foundation
+import CoreLocation
 import NetDiagnosis
 import IPAddress2City
+
+
+// MARK: MapLocation
+struct MapLocation: Identifiable {
+    let id = UUID()
+    let name: String
+    let coordinate: CLLocationCoordinate2D
+}
 
 // MARK: GeoAddress
 public struct GeoAddress : Identifiable {
@@ -62,30 +71,34 @@ extension ContentView {
     class ViewModel {
         private(set) var error: Error?
         private(set) var route: [[NetResponse]] = []
-        private(set) var listOfGeoAddresses: [String: GeoAddress] = [:]
         private(set) var pings: [NetResponse] = []
         private(set) var pingsweeps: [NetResponse] = []
         private(set) var ping: NetResponse = .null
-        private(set) var geoAddress: GeoAddress?
+        
+        internal var localGeoAddress: GeoAddress?
+        internal var listOfGeoAddresses: [String: GeoAddress] = [:]
+        internal var listOfGeoAddressesMapLocation: [String: MapLocation] = [:]
         internal let network: NetDiagnosticsProtocol
         internal let localAddressGetter: CurrentIPAddressGetterProtocol
         internal let geolookup: GeoAddressLookupProtocol
-    
+        internal let coordinateLookup: GeoCoordinateLookupProtocol
+        
         
         init(network: NetDiagnosticsProtocol = NetDiagManager(),
              localAddressGetter: CurrentIPAddressGetterProtocol = CurrentIPAddressDYNDNSGetter(),
-             geolookup: GeoAddressLookupProtocol = GeoAddressLookup()
+             geolookup: GeoAddressLookupProtocol = GeoAddressLookup(),
+             coordinateLookup: GeoCoordinateLookupProtocol = GeoCoordinateLookup()
         ) {
             
             self.network = network
             self.localAddressGetter = localAddressGetter
             self.geolookup = geolookup
+            self.coordinateLookup = coordinateLookup
             
             localSetup()
         }
-
-            
-        fileprivate func addPing(_ item: Pinger.Response) {
+        
+        fileprivate func didPingResponse(_ item: Pinger.Response) {
             let ping = NetResponse(
                 len: item.len,
                 from: item.from,
@@ -97,7 +110,7 @@ extension ContentView {
             self.ping = ping
         }
         
-        fileprivate func addSweepPings(_ items: [Pinger.Response]) {
+        fileprivate func didSweepPingsResponse(_ items: [Pinger.Response]) {
             var pings: [NetResponse] = []
             for item in items {
                 let res = NetResponse(
@@ -113,7 +126,7 @@ extension ContentView {
             self.pingsweeps = pings
         }
         
-        fileprivate func addPings(_ items: [Pinger.Response]) {
+        fileprivate func didPingsResponse(_ items: [Pinger.Response]) {
             var pings: [NetResponse] = []
             for item in items {
                 let res = NetResponse(
@@ -129,7 +142,7 @@ extension ContentView {
             self.pings = pings
         }
         
-        fileprivate func addRoutes(_ items: [[Pinger.Response]] ) {
+        fileprivate func didTracerouteResponse(_ items: [[Pinger.Response]] ) {
             var route: [[NetResponse]] = []
             var geoAddress: [String: GeoAddress] = [:]
             for item in items {
@@ -154,6 +167,29 @@ extension ContentView {
             }
             self.route = route
             self.listOfGeoAddresses = geoAddress
+        }
+        
+        func getGeoAddress(_ from: String) -> GeoAddress? {
+            self.listOfGeoAddresses[from]
+        }
+        
+        func getGeoAddressesMapLocation(_ from: String) -> MapLocation? {
+            self.listOfGeoAddressesMapLocation[from]
+        }
+        
+        func mapRoute() -> [MapLocation] {
+            var mapRoute = [MapLocation]()
+            for hop in self.route where !hop.isEmpty {
+                // Get the Geo Address
+                if let geoAddress = getGeoAddress("\(hop[0].from)") {
+                    // Get the location of trhe Geo Address
+                    let mapLocation = getGeoAddressesMapLocation(geoAddress.locationName)
+                    if let mapLocation = mapLocation {
+                        mapRoute.append(mapLocation)
+                    }
+                }
+            }
+            return mapRoute
         }
     }
 }
@@ -243,19 +279,18 @@ extension ContentView.ViewModel {
         hopLimit: UInt8? = nil,
         timeOut: TimeInterval = 1.0
     ) async throws {
-            let result = try await ping(
-                address: address,
-                packetSize: packetSize,
-                hopLimit: hopLimit,
-                timeOut: timeOut
-            )
-            switch result {
-            case .success(let item):
-                self.addPing(item)
-            case .failure(let error):
-                throw error
-            }
-
+        let result = try await ping(
+            address: address,
+            packetSize: packetSize,
+            hopLimit: hopLimit,
+            timeOut: timeOut
+        )
+        switch result {
+        case .success(let item):
+            self.didPingResponse(item)
+        case .failure(let error):
+            throw error
+        }
     }
     
     func ping(
@@ -272,7 +307,7 @@ extension ContentView.ViewModel {
         )
         switch result {
         case .success(let item):
-            self.addPing(item)
+            self.didPingResponse(item)
         case .failure(let error):
             throw error
         }
@@ -343,7 +378,7 @@ extension ContentView.ViewModel {
             return .failure(error)
         }
     }
-     
+    
     func traceroute(
         _ address: String,
         packetSize: Int? = nil,
@@ -361,9 +396,11 @@ extension ContentView.ViewModel {
             packetCount: packetCount,
             timeOut: timeOut
         )
+        
         switch result {
         case .success(let items):
-            self.addRoutes(items)
+            self.didTracerouteResponse(items)
+            try self.getGeoAddressGoordinates()
         case .failure(let error):
             throw error
         }
@@ -377,7 +414,7 @@ extension ContentView.ViewModel {
         packetCount: UInt8 = 3,
         timeOut: TimeInterval = 1.0
     ) async throws {
-
+        
         let result = try await traceroute(
             hostname: hostname,
             packetSize: packetSize,
@@ -388,7 +425,8 @@ extension ContentView.ViewModel {
         )
         switch result {
         case .success(let items):
-            self.addRoutes(items)
+            self.didTracerouteResponse(items)
+            try self.getGeoAddressGoordinates()
         case .failure(let error):
             throw error
         }
@@ -425,7 +463,7 @@ extension ContentView.ViewModel {
                     }
                 }
             }
-            self.addPings(result)
+            self.didPingsResponse(result)
         }
     }
 }
@@ -459,17 +497,41 @@ extension ContentView.ViewModel {
                 }
             }
         }
-        self.addSweepPings(result)
+        
+        self.didSweepPingsResponse(result)
+    }
+}
+
+extension ContentView.ViewModel {
+    fileprivate func getGeoAddressGoordinates() throws {
+        Task {
+            for address in listOfGeoAddresses.values {
+                do {
+                    if self.listOfGeoAddressesMapLocation [address.locationName] == nil {
+                        let coordinate = try await coordinateLookup.location(with: address.locationName)
+                        // Used the default name in case that the original name are unavailable
+                        let name = coordinate.name.isEmpty ? address.locationName : coordinate.name
+                        let location = MapLocation(
+                            name: name,
+                            coordinate: coordinate.location
+                        )
+                        self.listOfGeoAddressesMapLocation[address.locationName] = location
+                    }
+                } catch {
+                    throw error
+                }
+            }
+        }
     }
 }
 
 
 extension ContentView.ViewModel {
-    func localSetup() {
+    fileprivate func localSetup() {
         Task {
             do {
                 // Get the local IP address for the bogon address cases
-                self.geoAddress = try await localGeoAddress()
+                self.localGeoAddress = try await getLocalGeoAddress()
                 
             } catch {
                 print(error)
@@ -477,9 +539,9 @@ extension ContentView.ViewModel {
         }
     }
     
-    func locateGeoAddress(with address: String) throws -> GeoAddress {
+    fileprivate func locateGeoAddress(with address: String) throws -> GeoAddress {
         if try IPAddressUtilities.isBogon(string: address) {
-            if let geoAddress = geoAddress {
+            if let geoAddress = localGeoAddress {
                 return geoAddress
             } else {
                 throw GeoAddressError.localAddressError
@@ -489,7 +551,7 @@ extension ContentView.ViewModel {
     }
     
     /// Get the local GeoAddress
-    func localGeoAddress() async throws -> GeoAddress? {
+    fileprivate func getLocalGeoAddress() async throws -> GeoAddress? {
         if let localIPAddress = try await localAddressGetter.currentAddress() {
             return try locateGeoAddress(with: localIPAddress)
         }

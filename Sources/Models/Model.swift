@@ -5,9 +5,8 @@
 //  Created by Mac on 23/12/25.
 //
 
-import SwiftUI
+import Foundation
 import NetDiagnosis
-import IPAddress2City
 
 // MARK: NetResponse
 public struct NetResponse: Identifiable {
