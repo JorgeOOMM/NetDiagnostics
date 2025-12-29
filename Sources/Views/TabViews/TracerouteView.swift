@@ -6,8 +6,6 @@
 //
 
 import SwiftUI
-import IPAddress2City
-
 
 // MARK: TracerouteConfig
 struct TracerouteConfig {
@@ -19,6 +17,7 @@ struct TracerouteConfig {
     var timeOut: Float = defaultTimeOut
 }
 
+// MARK: TracerouteState
 enum TracerouteState {
     case idle
     case running(String)
@@ -32,8 +31,16 @@ enum TracerouteState {
             return false
         }
     }
+    
+    var isRunning: Bool {
+        switch self {
+        case .running:
+            return true
+        default:
+            return false
+        }
+    }
 }
-
 
 // MARK: TracerouteView
 struct TracerouteView: View {
@@ -49,7 +56,6 @@ struct TracerouteView: View {
 #endif
     
     @State private var config = TracerouteConfig()
-    
     @State private var isMapPresented = false
     @State private var isSettingsPresented = false
     @State private var viewModel: ContentView.ViewModel
@@ -89,7 +95,6 @@ struct TracerouteView: View {
             }
         }
     }
-
     
     var body: some View {
         NavigationStack {
@@ -100,7 +105,10 @@ struct TracerouteView: View {
                 TracerouteGridView(viewModel: self.viewModel)
                 TracerouteStatusView(status: $tracerouteState)
                 .transition(.move(edge: .trailing)) // Add animation for status view
-                .animation(.spring(response: 0.5, dampingFraction: 1.5, blendDuration: 1.5), value: tracerouteState.isIdle)
+                .animation(
+                    .spring(response: 0.5, dampingFraction: 1.5, blendDuration: 1.5),
+                    value: tracerouteState.isIdle
+                )
             }
             .navigationTitle("Traceroute")
             .navigationBarTitleDisplayMode(.inline)
@@ -109,12 +117,12 @@ struct TracerouteView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Map", systemImage: "map") {
                         isMapPresented = true
-                    }
+                    }.disabled(tracerouteState.isRunning)
                 }
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Settings", systemImage: "slider.horizontal.3") {
                         isSettingsPresented = true
-                    }
+                    }.disabled(tracerouteState.isRunning)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     runButton
@@ -123,7 +131,7 @@ struct TracerouteView: View {
             .sheet(isPresented: $isMapPresented) {
                 NavigationView {
                     VStack {
-                        TracerouteMapView(viewModel: viewModel)
+                        TracerouteMapView(mapRoute: viewModel.mapRoute())
                     }
                     .navigationTitle("Map")
                     .navigationBarTitleDisplayMode(.inline)
