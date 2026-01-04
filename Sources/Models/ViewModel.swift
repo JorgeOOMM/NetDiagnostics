@@ -7,7 +7,7 @@
 import Foundation
 import CoreLocation
 import NetDiagnosis
-import IPAddress2City
+import IPAddress2Geolocation
 
 
 // MARK: MapLocation
@@ -46,13 +46,13 @@ enum GeoAddressError: Error {
     case localAddressError
 }
 
-// MARK: GeoAddressLookupProtocol
-protocol GeoAddressLookupProtocol {
+// MARK: IPAddress2LocationProtocol
+protocol IPAddress2LocationProtocol {
     func locate(with address: String) throws -> GeoAddress
 }
 
-// MARK: GeoAddressLookup: GeoAddressLookupProtocol
-extension GeoAddressLookup: GeoAddressLookupProtocol {
+// MARK: IPAddress2Location: IPAddress2LocationProtocol
+extension IPAddress2Location: IPAddress2LocationProtocol {
     public func locate(with address: String) throws -> GeoAddress {
         GeoAddress(
             address: address,
@@ -80,14 +80,14 @@ extension ContentView {
         internal var listOfGeoAddressesMapLocation: [String: MapLocation] = [:]
         internal let network: NetDiagnosticsProtocol
         internal let localAddressGetter: CurrentIPAddressGetterProtocol
-        internal let geolookup: GeoAddressLookupProtocol
-        internal let coordinateLookup: GeoCoordinateLookupProtocol
+        internal let geolookup: IPAddress2LocationProtocol
+        internal let coordinateLookup: IPGeolocationProtocol
         
         
         init(network: NetDiagnosticsProtocol = NetDiagManager(),
              localAddressGetter: CurrentIPAddressGetterProtocol = CurrentIPAddressDYNDNSGetter(),
-             geolookup: GeoAddressLookupProtocol = GeoAddressLookup(),
-             coordinateLookup: GeoCoordinateLookupProtocol = GeoCoordinateLookup()
+             geolookup: IPAddress2LocationProtocol = IPAddress2Location(),
+             coordinateLookup: IPGeolocationProtocol = IPGeolocation()
         ) {
             
             self.network = network
@@ -177,15 +177,16 @@ extension ContentView {
             self.listOfGeoAddressesMapLocation[from]
         }
         
-        func mapRoute() -> [MapLocation] {
-            var mapRoute = [MapLocation]()
+        func mapRoute() -> [String: MapLocation] {
+            var mapRoute = [String: MapLocation]()
             for hop in self.route where !hop.isEmpty {
                 // Get the Geo Address
-                if let geoAddress = getGeoAddress("\(hop[0].from)") {
+                let address = "\(hop[0].from)"
+                if let geoAddress = getGeoAddress(address) {
                     // Get the location of trhe Geo Address
                     let mapLocation = getGeoAddressesMapLocation(geoAddress.locationName)
                     if let mapLocation = mapLocation {
-                        mapRoute.append(mapLocation)
+                        mapRoute[address] = mapLocation
                     }
                 }
             }
@@ -323,7 +324,7 @@ extension ContentView.ViewModel {
         initHop: UInt8 = 1,
         maxHop: UInt8 = 64,
         packetCount: UInt8 = 3,
-        timeOut: TimeInterval = 1.0
+        timeOut: TimeInterval = 5.0
     ) async throws -> Result<[[Pinger.Response]], Error> {
         do {
             // Also support IPv6 address
@@ -353,7 +354,7 @@ extension ContentView.ViewModel {
         initHop: UInt8 = 1,
         maxHop: UInt8 = 64,
         packetCount: UInt8 = 3,
-        timeOut: TimeInterval = 1.0
+        timeOut: TimeInterval = 5.0
     ) async throws -> Result<[[Pinger.Response]], Error> {
         do {
             // Also support IPv6 address
@@ -385,7 +386,7 @@ extension ContentView.ViewModel {
         initHop: UInt8 = 1,
         maxHop: UInt8 = 64,
         packetCount: UInt8 = 3,
-        timeOut: TimeInterval = 1.0
+        timeOut: TimeInterval = 5.0
     ) async throws {
         
         let result = try await traceroute(
@@ -412,7 +413,7 @@ extension ContentView.ViewModel {
         initHop: UInt8 = 1,
         maxHop: UInt8 = 64,
         packetCount: UInt8 = 3,
-        timeOut: TimeInterval = 1.0
+        timeOut: TimeInterval = 5.0
     ) async throws {
         
         let result = try await traceroute(

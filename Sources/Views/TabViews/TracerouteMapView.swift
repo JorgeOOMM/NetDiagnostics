@@ -1,6 +1,6 @@
 //
 //  TracerouteGeoAddressMapView.swift
-//  IPAddress2CityExample
+//  IPAddress2Geolocation
 //
 //  Created by Mac on 14/12/25.
 //  Note: using-mappolyline-overlays-in-mapkit-with-swiftui
@@ -9,24 +9,54 @@
 import MapKit
 import SwiftUI
 
+// MARK: MapLocation: Hashable
+extension MapLocation: Hashable {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(name)
+        hasher.combine(coordinate.latitude)
+        hasher.combine(coordinate.longitude)
+    }
+}
+extension MapLocation: Equatable {
+    static func == (lhs: MapLocation, rhs: MapLocation) -> Bool {
+        lhs.id == rhs.id &&
+        lhs.name == rhs.name &&
+        lhs.coordinate.latitude == rhs.coordinate.latitude &&
+        lhs.coordinate.longitude == rhs.coordinate.longitude
+    }
+}
+
 // MARK: TracerouteGeoAddressMapView
 struct TracerouteMapView: View {
-    /// Route MapLocation
-    let mapRoute: [MapLocation]
+    var viewModel: ContentView.ViewModel
+    
+    @State private var selectedPlace: MapLocation?
     /// Current position
+    ///
+    /// @State private var position: MapCameraPosition = .automatic
     @State private var position = MapCameraPosition.region(
         MKCoordinateRegion(
             center: .newYork,
             span: MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 1)
         )
     )
+    
+    /// Route MapLocation
+    private var mapRoute: [MapLocation] {
+        viewModel.mapRoute().map{$0.value}
+    }
+    private func mapAddress(for ident: UUID) -> String? {
+        viewModel.mapRoute().first{$0.value.id == ident }?.key
+    }
+    
     /// Route MapLocation coordinates
     private var mapRouteCoordinates: [CLLocationCoordinate2D] {
         mapRoute.map { $0.coordinate }
     }
     /// Line StrokeStyle
     private let strokeStyle = StrokeStyle(
-        lineWidth: 3,
+        lineWidth: 2,
         lineCap: .round,
         lineJoin: .round,
         dash: [5, 5]
@@ -36,16 +66,31 @@ struct TracerouteMapView: View {
     
     var body: some View {
         VStack {
-            Map(position: $position, interactionModes: .all) {
+            Map(position: $position, interactionModes: .all, selection: $selectedPlace) {
                 // Add the marks of the route
-                ForEach(self.mapRoute) {  mark in
-                    Marker(coordinate: mark.coordinate) {
-                        Label(mark.name, systemImage: "mappin")
-                    }
+                ForEach(self.mapRoute) {  place in
+                    //                    Annotation(place.name, coordinate: place.coordinate) {
+                    //                        AnnotationInfoView(place: place)
+                    //                    }
+                    //                    .tag(place)
+                    //                    .annotationTitles(.hidden)
+                    
+                    Marker(coordinate: place.coordinate) {
+                        Label(place.name, systemImage: "mappin")
+                    }.tag(place)
                 }
                 // Add the MapPolyline of the route
                 MapPolyline(coordinates: self.mapRouteCoordinates)
-                .stroke(gradient, style: strokeStyle)
+                    .stroke(gradient, style: strokeStyle)
+            }.safeAreaInset(edge: .bottom) {
+                if let selectedPlace,
+                   let selectedMapAddress = self.mapAddress(for: selectedPlace.id),
+                   let address = viewModel.getGeoAddress(selectedMapAddress) {
+                    PlaceInfoView(address: address)
+                        .frame(height: 140)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .padding([.top, .horizontal])
+                }
             }
         }.onAppear {
             // Set the local coordinate position

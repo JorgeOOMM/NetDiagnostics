@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0405FA392EE0BB6F00C18B2E /* NetDiagnosis in Frameworks */ = {isa = PBXBuildFile; productRef = 0405FA382EE0BB6F00C18B2E /* NetDiagnosis */; };
-		047B4B822EF38494000C5FEB /* IPAddress2City in Frameworks */ = {isa = PBXBuildFile; productRef = 047B4B812EF38494000C5FEB /* IPAddress2City */; };
+		044517D32F0295270001C2B0 /* IPAddress2Geolocation in Frameworks */ = {isa = PBXBuildFile; productRef = 044517D22F0295270001C2B0 /* IPAddress2Geolocation */; };
 		048C8EC52ED7A056006AC581 /* Collections in Frameworks */ = {isa = PBXBuildFile; productRef = 048C8EC42ED7A056006AC581 /* Collections */; };
 /* End PBXBuildFile section */
 
@@ -59,8 +59,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				047B4B822EF38494000C5FEB /* IPAddress2City in Frameworks */,
 				0405FA392EE0BB6F00C18B2E /* NetDiagnosis in Frameworks */,
+				044517D32F0295270001C2B0 /* IPAddress2Geolocation in Frameworks */,
 				048C8EC52ED7A056006AC581 /* Collections in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -113,7 +113,7 @@
 				048C8E7E2ED79E38006AC581 /* Sources */,
 				048C8E7F2ED79E38006AC581 /* Frameworks */,
 				048C8E802ED79E38006AC581 /* Resources */,
-				048653C22EE0AF7B008B7301 /* ShellScript */,
+				048653C22EE0AF7B008B7301 /* Run Script */,
 			);
 			buildRules = (
 			);
@@ -127,6 +127,7 @@
 				048C8EC42ED7A056006AC581 /* Collections */,
 				0405FA382EE0BB6F00C18B2E /* NetDiagnosis */,
 				047B4B812EF38494000C5FEB /* IPAddress2City */,
+				044517D22F0295270001C2B0 /* IPAddress2Geolocation */,
 			);
 			productName = Proxys;
 			productReference = 048C8E822ED79E38006AC581 /* NetDiagnostics.app */;
@@ -213,7 +214,7 @@
 			packageReferences = (
 				048C8EC32ED7A056006AC581 /* XCRemoteSwiftPackageReference "swift-collections" */,
 				0405FA372EE0BB6F00C18B2E /* XCRemoteSwiftPackageReference "NetDiagnosis" */,
-				047B4B802EF38494000C5FEB /* XCLocalSwiftPackageReference "../IPAddress2City" */,
+				044517D12F0295270001C2B0 /* XCLocalSwiftPackageReference "../IPAddress2Geolocation" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 048C8E832ED79E38006AC581 /* Products */;
@@ -252,7 +253,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		048653C22EE0AF7B008B7301 /* ShellScript */ = {
+		048653C22EE0AF7B008B7301 /* Run Script */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -262,6 +263,7 @@
 			);
 			inputPaths = (
 			);
+			name = "Run Script";
 			outputFileListPaths = (
 			);
 			outputPaths = (
@@ -603,9 +605,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		047B4B802EF38494000C5FEB /* XCLocalSwiftPackageReference "../IPAddress2City" */ = {
+		044517D12F0295270001C2B0 /* XCLocalSwiftPackageReference "../IPAddress2Geolocation" */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = ../IPAddress2City;
+			relativePath = ../IPAddress2Geolocation;
 		};
 /* End XCLocalSwiftPackageReference section */
 
@@ -633,6 +635,10 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 0405FA372EE0BB6F00C18B2E /* XCRemoteSwiftPackageReference "NetDiagnosis" */;
 			productName = NetDiagnosis;
+		};
+		044517D22F0295270001C2B0 /* IPAddress2Geolocation */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = IPAddress2Geolocation;
 		};
 		047B4B812EF38494000C5FEB /* IPAddress2City */ = {
 			isa = XCSwiftPackageProductDependency;

@@ -75,7 +75,7 @@ struct TracerouteStatusView: View {
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 16)
     }
-    
+    // TODO: traceroute to www.google.com (142.250.178.164), 64 hops max, 40 byte packets
     var body: some View {
         switch status {
         case .idle:

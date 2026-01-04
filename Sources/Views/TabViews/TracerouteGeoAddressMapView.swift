@@ -1,6 +1,6 @@
 //
 //  TracerouteGeoAddressMapView.swift
-//  IPAddress2CityExample
+//  IPAddress2Geolocation
 //
 //  Created by Mac on 14/12/25.
 //
@@ -8,7 +8,7 @@
 import CoreLocation
 import MapKit
 import SwiftUI
-import IPAddress2City
+import IPAddress2Geolocation
 
 
 extension CLLocationCoordinate2D {
@@ -28,7 +28,7 @@ struct TracerouteGeoAddressMapView: View {
             span: MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 1)
         )
     )
-    private let coordinateLookup = GeoCoordinateLookup()
+    private let coordinateLookup = IPGeolocation()
     var body: some View {
         VStack {
             Divider()

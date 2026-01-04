@@ -5,7 +5,7 @@
 //  Created by Mac on 7/12/25.
 //
 
-import IPAddress2City
+import IPAddress2Geolocation
 import SwiftUI
 
 

@@ -9,9 +9,9 @@ let maxPacketSize: Float = 1472
 let minPacketSize: Float = 64
 let defaultPacketSize: Float = minPacketSize
 
-let minTimeOut: Float = 0.0
+let minTimeOut: Float = 1.0
 let maxTimeOut: Float = 10.0
-let defaultTimeOut: Float = 1.0
+let defaultTimeOut: Float = minTimeOut
 
 let minHopLimit: Float = 64
 let maxHopLimit: Float = 255

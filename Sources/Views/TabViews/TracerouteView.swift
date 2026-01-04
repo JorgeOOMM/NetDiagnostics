@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+
 // MARK: TracerouteConfig
 struct TracerouteConfig {
     // Traceroute configuration
@@ -59,7 +60,7 @@ struct TracerouteView: View {
     @State private var isMapPresented = false
     @State private var isSettingsPresented = false
     @State private var viewModel: ContentView.ViewModel
-    @State private var networkAddress = "www.bing.kr"
+    @State private var networkAddress = "www.google.com"
     @State private var tracerouteState: TracerouteState = .idle
     
     @ViewBuilder var runButton: some View {
@@ -131,7 +132,7 @@ struct TracerouteView: View {
             .sheet(isPresented: $isMapPresented) {
                 NavigationView {
                     VStack {
-                        TracerouteMapView(mapRoute: viewModel.mapRoute())
+                        TracerouteMapView(viewModel: self.viewModel)
                     }
                     .navigationTitle("Map")
                     .navigationBarTitleDisplayMode(.inline)
