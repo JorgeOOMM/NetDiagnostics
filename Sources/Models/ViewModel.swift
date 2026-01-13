@@ -5,65 +5,8 @@
 //
 
 import Foundation
-import CoreLocation
 import NetDiagnosis
 import IPAddress2Geolocation
-
-
-// MARK: MapLocation
-struct MapLocation: Identifiable {
-    let id = UUID()
-    let name: String
-    let coordinate: CLLocationCoordinate2D
-}
-
-// MARK: GeoAddress
-public struct GeoAddress : Identifiable {
-    public let id = UUID()
-    // Current Address
-    public let address: String
-    // Start Range Address
-    public let start: String
-    // End Range Address
-    public let end: String
-    // Country for Range Address
-    public let country: String
-    // Country Flag for Range Address
-    public let flag: String
-    // Country Subdivision for Range Address
-    public let subdivision: String
-    // Complete location name
-    public var locationName: String {
-        subdivision + " - " + country
-    }
-    // Subdivisions
-    public var subdivisions: [String] {
-        subdivision.components(separatedBy: " - ")
-    }
-}
-
-enum GeoAddressError: Error {
-    case localAddressError
-}
-
-// MARK: IPAddress2LocationProtocol
-protocol IPAddress2LocationProtocol {
-    func locate(with address: String) throws -> GeoAddress
-}
-
-// MARK: IPAddress2Location: IPAddress2LocationProtocol
-extension IPAddress2Location: IPAddress2LocationProtocol {
-    public func locate(with address: String) throws -> GeoAddress {
-        GeoAddress(
-            address: address,
-            start: try start(for: address),
-            end: try end(for: address),
-            country: try country(for: address),
-            flag: try flag(for: address),
-            subdivision: try subdivision(for: address)
-        )
-    }
-}
 
 // MARK: ContentView
 extension ContentView {
@@ -528,30 +471,35 @@ extension ContentView.ViewModel {
 
 
 extension ContentView.ViewModel {
+    
+    /// Get the public local IP address for the bogon address cases
     fileprivate func localSetup() {
         Task {
             do {
-                // Get the local IP address for the bogon address cases
                 self.localGeoAddress = try await getLocalGeoAddress()
-                
             } catch {
                 print(error)
             }
         }
     }
     
-    fileprivate func locateGeoAddress(with address: String) throws -> GeoAddress {
+    /// Geo Locate a IP address
+    /// - Parameter address: IP address
+    ///
+    /// - Returns: GeoAddress struct
+    fileprivate func locateGeoAddress(with address: String) throws -> GeoAddress? {
         if try IPAddressUtilities.isBogon(string: address) {
-            if let geoAddress = localGeoAddress {
-                return geoAddress
-            } else {
-                throw GeoAddressError.localAddressError
+            guard let geoAddress = localGeoAddress else {
+                return nil
             }
+            return geoAddress
         }
         return try geolookup.locate(with: address)
     }
     
     /// Get the local GeoAddress
+    ///
+    /// - Returns: GeoAddress?
     fileprivate func getLocalGeoAddress() async throws -> GeoAddress? {
         if let localIPAddress = try await localAddressGetter.currentAddress() {
             return try locateGeoAddress(with: localIPAddress)

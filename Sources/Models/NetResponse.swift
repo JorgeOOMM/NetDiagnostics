@@ -1,5 +1,5 @@
 //
-//  Model.swift
+//  NetResponse.swift
 //  NetDiagnostics
 //
 //  Created by Mac on 23/12/25.

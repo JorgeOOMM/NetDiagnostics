@@ -21,13 +21,8 @@ extension CLLocationCoordinate2D {
 // MARK: TracerouteGeoAddressMapView
 struct TracerouteGeoAddressMapView: View {
     let address: GeoAddress
-    @State private var location = MapLocation(name: "New York", coordinate: .newYork)
-    @State private var position = MapCameraPosition.region(
-        MKCoordinateRegion(
-            center: .newYork,
-            span: MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 1)
-        )
-    )
+    @State private var location: MapLocation = .unknown
+    @State private var position: MapCameraPosition = .automatic
     private let coordinateLookup = IPGeolocation()
     var body: some View {
         VStack {

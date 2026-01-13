@@ -9,23 +9,7 @@
 import MapKit
 import SwiftUI
 
-// MARK: MapLocation: Hashable
-extension MapLocation: Hashable {
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-        hasher.combine(name)
-        hasher.combine(coordinate.latitude)
-        hasher.combine(coordinate.longitude)
-    }
-}
-extension MapLocation: Equatable {
-    static func == (lhs: MapLocation, rhs: MapLocation) -> Bool {
-        lhs.id == rhs.id &&
-        lhs.name == rhs.name &&
-        lhs.coordinate.latitude == rhs.coordinate.latitude &&
-        lhs.coordinate.longitude == rhs.coordinate.longitude
-    }
-}
+// TODO: https://ip.guide
 
 // MARK: TracerouteGeoAddressMapView
 struct TracerouteMapView: View {
@@ -34,20 +18,21 @@ struct TracerouteMapView: View {
     @State private var selectedPlace: MapLocation?
     /// Current position
     ///
-    /// @State private var position: MapCameraPosition = .automatic
-    @State private var position = MapCameraPosition.region(
-        MKCoordinateRegion(
-            center: .newYork,
-            span: MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 1)
-        )
-    )
+    @State private var position: MapCameraPosition = .automatic
     
     /// Route MapLocation
     private var mapRoute: [MapLocation] {
-        viewModel.mapRoute().map{$0.value}
+        viewModel.mapRoute().map{ $0.value }
     }
+    
+    /// Map address from MapLocation id
+    ///
+    /// - Parameter ident: UUID
+    ///
+    /// - Returns: String?
+    ///
     private func mapAddress(for ident: UUID) -> String? {
-        viewModel.mapRoute().first{$0.value.id == ident }?.key
+        viewModel.mapRoute().first{ $0.value.id == ident }?.key
     }
     
     /// Route MapLocation coordinates
